@@ -24,7 +24,7 @@ Fast video splitter CLI — split videos quickly with stream-copy by default, wi
 
 ## Requirements
 
-- Python 3.9 or newer
+- Python 3.10 or newer
 - `ffmpeg` and `ffprobe` on `PATH` (must be installed separately)
 
 Install ffmpeg via your system package manager:
