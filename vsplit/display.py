@@ -1,5 +1,7 @@
 """Display utilities — progress bars, tables, formatted output."""
 
+from __future__ import annotations
+
 from pathlib import Path
 
 from rich.console import Console
