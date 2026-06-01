@@ -1,5 +1,7 @@
 """Universal media compatibility settings for vsplit outputs."""
 
+from __future__ import annotations
+
 import shutil
 import subprocess
 from functools import lru_cache

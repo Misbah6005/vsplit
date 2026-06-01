@@ -1,5 +1,7 @@
 """CLI entry point — typer app definition."""
 
+from __future__ import annotations
+
 import glob
 from pathlib import Path
 

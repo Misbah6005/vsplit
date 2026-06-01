@@ -1,5 +1,7 @@
 """Interactive wizard — step-by-step guided flow."""
 
+from __future__ import annotations
+
 import glob
 from pathlib import Path
 

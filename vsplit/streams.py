@@ -1,5 +1,7 @@
 """Stream parsing, language matching, and ffmpeg map building."""
 
+from __future__ import annotations
+
 from pathlib import Path
 
 from vsplit.errors import NoAudioMatchError, NoSubtitleMatchError

@@ -1,5 +1,7 @@
 """Batch orchestration — process multiple files with parallel execution."""
 
+from __future__ import annotations
+
 from pathlib import Path
 
 from vsplit.compat import (
