@@ -4,6 +4,7 @@ import json
 import subprocess
 from pathlib import Path
 
+from vsplit.compat import VIDEO_FPS_CAP, VIDEO_HEIGHT_CAP, VIDEO_WIDTH_CAP
 from vsplit.errors import (
     CorruptFileError,
     EmptyFileError,
@@ -51,7 +52,9 @@ def get_duration(path: Path) -> float:
     duration = data.get("format", {}).get("duration")
     if duration:
         try:
-            return float(duration)
+            value = float(duration)
+            if value > 0 and value != float("inf"):
+                return value
         except (ValueError, TypeError):
             pass
 
@@ -61,7 +64,9 @@ def get_duration(path: Path) -> float:
         d = stream.get("duration")
         if d:
             try:
-                max_duration = max(max_duration, float(d))
+                value = float(d)
+                if value > 0 and value != float("inf"):
+                    max_duration = max(max_duration, value)
             except (ValueError, TypeError):
                 pass
 
@@ -112,23 +117,6 @@ def list_streams(path: Path) -> list[dict]:
         result.append(info)
 
     return result
-
-
-def get_format_info(path: Path) -> dict:
-    """Get format-level info (container format, size, etc.)."""
-    data = probe_file(path)
-    fmt = data.get("format", {})
-    return {
-        "format": fmt.get("format_long_name", "unknown"),
-        "size": int(fmt.get("size", 0)),
-        "bit_rate": fmt.get("bit_rate"),
-        "duration": fmt.get("duration"),
-    }
-
-
-VIDEO_WIDTH_CAP = 1920
-VIDEO_HEIGHT_CAP = 1080
-VIDEO_FPS_CAP = 60
 
 
 def exceeds_compatibility_limits(path: Path) -> tuple[bool, str]:

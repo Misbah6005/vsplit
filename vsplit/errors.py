@@ -15,12 +15,6 @@ class FFmpegNotFoundError(VsplitError):
     pass
 
 
-class InvalidDurationError(VsplitError):
-    """Invalid duration value."""
-
-    pass
-
-
 class ProbeError(VsplitError):
     """Error probing a video file."""
 
@@ -49,13 +43,6 @@ class EmptyFileError(ProbeError):
 
     def __init__(self, path: Path):
         super().__init__(path, "File is empty (0 bytes)")
-
-
-class PermissionDeniedError(ProbeError):
-    """Permission denied when accessing a file."""
-
-    def __init__(self, path: Path):
-        super().__init__(path, "Permission denied")
 
 
 class NoAudioMatchError(VsplitError):
@@ -104,6 +91,15 @@ class SubtitleFileError(VsplitError):
     pass
 
 
+class OutputDirError(VsplitError):
+    """Cannot create or write to output directory."""
+
+    def __init__(self, path: Path, reason: str):
+        self.path = path
+        self.reason = reason
+        super().__init__(f"Cannot create output directory {path}: {reason}")
+
+
 def check_ffmpeg():
     """Verify ffmpeg and ffprobe are installed."""
     import shutil
@@ -120,21 +116,3 @@ def check_ffmpeg():
             "ffprobe not found (usually comes with ffmpeg). "
             "Install the full ffmpeg package."
         )
-
-
-def format_error(error: Exception) -> str:
-    """Format an exception into a user-friendly message."""
-    if isinstance(error, FFmpegNotFoundError):
-        return f"[bold red]Error:[/bold red] {error}"
-    elif isinstance(error, ProbeError):
-        return f"[bold red]Probe Error:[/bold red] {error}"
-    elif isinstance(error, NoAudioMatchError):
-        return f"[bold red]Audio Error:[/bold red] {error}"
-    elif isinstance(error, NoSubtitleMatchError):
-        return f"[bold red]Subtitle Error:[/bold red] {error}"
-    elif isinstance(error, SplitError):
-        return f"[bold red]Split Error:[/bold red] {error}"
-    elif isinstance(error, VsplitError):
-        return f"[bold red]Error:[/bold red] {error}"
-    else:
-        return f"[bold red]Unexpected Error:[/bold red] {error}"

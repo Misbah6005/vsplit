@@ -35,17 +35,17 @@ def print_box(title: str, lines: list[str], allowed: str | None = None):
 
 def print_error(message: str):
     """Print an error message."""
-    console.print(f"[bold red]Error:[/bold red] {message}")
+    console.print(f"[bold red]Error:[/bold red] {escape(message)}")
 
 
 def print_warning(message: str):
     """Print a warning message."""
-    console.print(f"[bold yellow]Warning:[/bold yellow] {message}")
+    console.print(f"[bold yellow]Warning:[/bold yellow] {escape(message)}")
 
 
 def print_success(message: str):
     """Print a success message."""
-    console.print(f"[bold green]✓[/bold green] {message}")
+    console.print(f"[bold green]✓[/bold green] {escape(message)}")
 
 
 def print_streams_table(streams: list[dict], file_name: str = ""):
@@ -86,16 +86,6 @@ def print_streams_table(streams: list[dict], file_name: str = ""):
         )
 
     console.print(table)
-
-
-def print_settings_summary(file_settings: list[dict]):
-    """Print current settings for each file."""
-    for i, item in enumerate(file_settings):
-        dur = format_duration(item["chunk_seconds"])
-        lang = ", ".join(item.get("languages") or []) or "all"
-        console.print(
-            f"  {i + 1}. {item['path'].name}  ->  {dur} chunks, audio: {lang}"
-        )
 
 
 def create_progress():

@@ -2,11 +2,21 @@
 
 from __future__ import annotations
 
+import math
 import subprocess
 from pathlib import Path
 
 from vsplit.errors import DiskFullError, SplitError
 from vsplit.utils import format_duration_short
+
+
+def _safe_ffmpeg_path(path: Path) -> str:
+    """Return a path string safe to pass to ffmpeg, even if the name starts with '-'."""
+    text = str(path)
+    if text.startswith("-"):
+        # Prepend './' so ffmpeg cannot interpret a leading dash as an option flag
+        return f"./{text}"
+    return text
 
 
 def calculate_chunks(
@@ -23,6 +33,11 @@ def calculate_chunks(
     """
     if chunk_seconds <= 0:
         raise ValueError("chunk duration must be positive")
+
+    if not math.isfinite(total_seconds):
+        raise ValueError("total duration must be a finite number")
+    if total_seconds < 0:
+        raise ValueError("total duration must be non-negative")
 
     if chunk_seconds >= total_seconds:
         return [(0.0, total_seconds)]
@@ -69,7 +84,7 @@ def split_chunk(
         "-ss",
         format_duration_short(start),
         "-i",
-        str(input_path),
+        _safe_ffmpeg_path(input_path),
     ]
 
     if input_args:
@@ -96,7 +111,13 @@ def split_chunk(
         cmd.extend(metadata_args)
 
     cmd.extend(
-        ["-avoid_negative_ts", "make_zero", "-movflags", "+faststart", str(output_path)]
+        [
+            "-avoid_negative_ts",
+            "make_zero",
+            "-movflags",
+            "+faststart",
+            _safe_ffmpeg_path(output_path),
+        ]
     )
 
     try:
@@ -124,66 +145,3 @@ def split_chunk(
         )
 
     return result
-
-
-def split_file(
-    input_path: Path,
-    output_dir: Path,
-    chunk_seconds: float,
-    map_args: list[str] | None = None,
-    on_chunk_start=None,
-    on_chunk_done=None,
-) -> list[Path]:
-    """Split a video file into chunks.
-
-    Args:
-        input_path: Source video file.
-        output_dir: Output directory for chunks.
-        chunk_seconds: Desired chunk duration in seconds.
-        map_args: Optional ffmpeg -map args.
-        on_chunk_start: Callback(chunk_index, total, start, duration) before each chunk.
-        on_chunk_done: Callback(chunk_index, total, output_path, elapsed) after each chunk.
-
-    Returns:
-        List of output file paths.
-    """
-    import time
-
-    from vsplit.probe import get_duration
-
-    total_seconds = get_duration(input_path)
-    chunks = calculate_chunks(total_seconds, chunk_seconds)
-
-    output_dir.mkdir(parents=True, exist_ok=True)
-    ext = input_path.suffix
-
-    output_paths = []
-    total = len(chunks)
-
-    for i, (start, end) in enumerate(chunks):
-        output_path = output_dir / f"{i}{ext}"
-        output_paths.append(output_path)
-
-        chunk_duration = end - start
-
-        if on_chunk_start:
-            on_chunk_start(i, total, start, chunk_duration)
-
-        t0 = time.monotonic()
-        split_chunk(
-            input_path,
-            output_path,
-            start,
-            chunk_duration,
-            None,
-            map_args,
-            None,
-            None,
-            chunk_index=i,
-        )
-        elapsed = time.monotonic() - t0
-
-        if on_chunk_done:
-            on_chunk_done(i, total, output_path, elapsed)
-
-    return output_paths

@@ -8,16 +8,18 @@ from functools import lru_cache
 from pathlib import Path
 
 BASIC_OUTPUT_SUFFIX = ".mp4"
-BASIC_TEXT_SUBTITLE_CODECS = {"ass", "mov_text", "ssa", "subrip", "text", "webvtt"}
+VIDEO_WIDTH_CAP = 1920
+VIDEO_HEIGHT_CAP = 1080
+VIDEO_FPS_CAP = 60
 BASIC_VIDEO_FILTER = (
-    "fps=fps='min(60,source_fps)',"
-    "scale=w='min(1920,iw)':h='min(1080,ih)':"
+    f"fps=fps='min({VIDEO_FPS_CAP},source_fps)',"
+    f"scale=w='min({VIDEO_WIDTH_CAP},iw)':h='min({VIDEO_HEIGHT_CAP},ih)':"
     "force_original_aspect_ratio=decrease:force_divisible_by=2,format=yuv420p"
 )
 VAAPI_RENDER_DEVICE = Path("/dev/dri/renderD128")
 VAAPI_VIDEO_FILTER = (
-    "fps=fps='min(60,source_fps)',"
-    "scale=w='min(1920,iw)':h='min(1080,ih)':"
+    f"fps=fps='min({VIDEO_FPS_CAP},source_fps)',"
+    f"scale=w='min({VIDEO_WIDTH_CAP},iw)':h='min({VIDEO_HEIGHT_CAP},ih)':"
     "force_original_aspect_ratio=decrease:force_divisible_by=2,format=nv12,hwupload"
 )
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import glob
 from pathlib import Path
 
+from rich.markup import escape
 from rich.prompt import Confirm, Prompt
 
 from vsplit.batch import FileSettings, execute_split, prepare_file
@@ -266,7 +267,9 @@ def step_inspect(
 
     # Handle errors
     for f, err in probe_errors.items():
-        console.print(f"[bold red]Error:[/bold red] {f.name}: {err}")
+        console.print(
+            f"[bold red]Error:[/bold red] {escape(f.name)}: {escape(str(err))}"
+        )
         if len(files) > 1:
             skip = Confirm.ask(f"Skip {f.name} and continue?", default=True)
             if not skip:
@@ -358,9 +361,6 @@ def apply_settings_to_indices(
     step_audio(targets, streams_by_file, target_settings)
     step_subtitles(targets, streams_by_file, target_settings)
     step_external_subtitles(targets, target_settings)
-
-    for offset, index in enumerate(indices):
-        file_settings[index] = target_settings[offset]
 
 
 def step_audio(
@@ -760,52 +760,6 @@ def _choose_one_track(tracks: list[dict], label: str) -> dict | None:
             return tracks[index]
 
 
-def _parse_track_selection(
-    raw: str, tracks: list[dict], kind: str
-) -> list[dict] | None:
-    """Parse number/code-based audio or subtitle selection."""
-    parts = [part.strip() for part in raw.split(",") if part.strip()]
-    selected = []
-    errors = []
-
-    for part in parts:
-        try:
-            index = int(part) - 1
-            if 0 <= index < len(tracks):
-                if tracks[index] not in selected:
-                    selected.append(tracks[index])
-            else:
-                errors.append(f"{part} (out of range 1-{len(tracks)})")
-            continue
-        except ValueError:
-            pass
-
-        part_lower = part.lower()
-        matched = [
-            track for track in tracks if (track.get("lang") or "").lower() == part_lower
-        ]
-        if matched:
-            for track in matched:
-                if track not in selected:
-                    selected.append(track)
-        else:
-            available = list({track.get("lang") or "unknown" for track in tracks})
-            errors.append(f'"{part}" (not found, available: {", ".join(available)})')
-
-    if errors and selected:
-        print_warning(
-            f"Kept {len(selected)} {kind} track(s). Ignored: {', '.join(errors)}"
-        )
-
-    if not selected:
-        if errors:
-            print_error(", ".join(errors))
-        print_error(f"No {kind} tracks selected.")
-        return None
-
-    return selected
-
-
 def _resolve_external_subtitles(raw: str) -> list[Path] | None:
     """Resolve an external subtitle path or glob."""
     if any(char in raw for char in "*?"):
@@ -962,7 +916,9 @@ def run_wizard(
                 prep = prepare_file(fs, output_root)
                 prep_list.append(prep)
             except VsplitError as e:
-                console.print(f"[bold red]Error:[/bold red] {fs.path.name}: {e}")
+                console.print(
+                    f"[bold red]Error:[/bold red] {escape(fs.path.name)}: {escape(str(e))}"
+                )
                 prep_errors[fs.path] = e
 
         if prep_errors:
@@ -1017,7 +973,8 @@ def run_wizard(
                     all_results[prep["path"]] = output_paths
                 except VsplitError as e:
                     console.print(
-                        f"[bold red]Error:[/bold red] {prep['path'].name}: {e}"
+                        f"[bold red]Error:[/bold red] "
+                        f"{escape(prep['path'].name)}: {escape(str(e))}"
                     )
                     all_results[prep["path"]] = []
                     failed_files.append(prep["path"])

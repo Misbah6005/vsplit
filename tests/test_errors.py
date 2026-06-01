@@ -12,7 +12,6 @@ from vsplit.errors import (
     SplitError,
     SubtitleFileError,
     VsplitError,
-    format_error,
 )
 
 
@@ -64,15 +63,3 @@ class TestMessages:
     def test_empty_file_error(self, tmp_path):
         e = EmptyFileError(tmp_path)
         assert "empty" in str(e).lower()
-
-
-class TestFormatError:
-    def test_formats_vsplit_error(self):
-        e = FFmpegNotFoundError("missing")
-        out = format_error(e)
-        assert "Error" in out
-        assert "missing" in out
-
-    def test_formats_unknown(self):
-        out = format_error(ValueError("weird"))
-        assert "Unexpected" in out or "Error" in out

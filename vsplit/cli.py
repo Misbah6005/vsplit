@@ -151,6 +151,10 @@ def main(
         print_error(str(e))
         raise typer.Exit(1)
 
+    # Expand ~ and make absolute in --output so paths like ~/Videos work
+    if output is not None:
+        output = output.expanduser().resolve()
+
     # Validate parallel
     if parallel < 0:
         print_error("Parallel count must be 0 or greater.")
@@ -211,6 +215,10 @@ def main(
     if sub_index and sub_lang:
         print_warning(
             "--sub-index and --sub-lang both specified; --sub-index takes precedence."
+        )
+    if no_subs and (sub_lang or sub_index):
+        print_warning(
+            "--no-subs overrides --sub-lang/--sub-index; no internal subtitles will be kept."
         )
 
     file_settings = []

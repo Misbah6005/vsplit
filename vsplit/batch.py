@@ -10,7 +10,7 @@ from vsplit.compat import (
     build_basic_codec_args,
     filter_basic_subtitles,
 )
-from vsplit.errors import SubtitleFileError
+from vsplit.errors import OutputDirError, SubtitleFileError
 from vsplit.probe import exceeds_compatibility_limits, get_duration, list_streams
 from vsplit.splitter import calculate_chunks
 from vsplit.streams import build_ffmpeg_maps, select_audio, select_subtitles
@@ -97,7 +97,11 @@ def _build_input_args(external_subtitles: list[dict]) -> list[str]:
     """Build extra ffmpeg input args for external subtitle files."""
     args = []
     for external_subtitle in external_subtitles:
-        args.extend(["-i", str(external_subtitle["path"])])
+        path = external_subtitle["path"]
+        text = str(path)
+        if text.startswith("-"):
+            text = f"./{text}"
+        args.extend(["-i", text])
     return args
 
 
@@ -266,7 +270,12 @@ def execute_split(
     if parallel < 1:
         parallel = 1 if prep.get("compatibility_mode") else 4
 
-    output_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        output_dir.mkdir(parents=True, exist_ok=True)
+    except PermissionError as e:
+        raise OutputDirError(output_dir, "permission denied") from e
+    except OSError as e:
+        raise OutputDirError(output_dir, str(e)) from e
 
     import concurrent.futures
     import time
