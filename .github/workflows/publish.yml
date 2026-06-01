@@ -1,8 +1,12 @@
 name: Publish to PyPI
 
+# Disabled by default — trusted publishing requires the project to exist on PyPI
+# and a Trusted Publisher to be registered for this repo. To enable:
+#   1. Create the vsplit project on PyPI.
+#   2. Register a Trusted Publisher: Misbah6005/vsplit, workflow publish.yml, environment pypi.
+#   3. Create a `pypi` environment in this repo's Settings > Environments.
+#   4. Re-add the `release: published` trigger below.
 on:
-  release:
-    types: [published]
   workflow_dispatch:
 
 jobs:
